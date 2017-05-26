@@ -6,6 +6,7 @@ use Predis\Client;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Config\Definition\Exception\Exception;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class DefaultController extends Controller
@@ -25,12 +26,14 @@ class DefaultController extends Controller
             die($e->getMessage());
         }
 
-        $predisClient->set('mama','mama1');
+        $predisClient->set('mama','supernajnowszenowe');
         $mam=$predisClient->get('mama');
 
 
+
         return $this->render('@App/index.html.twig', [
-            'mama'=>$mam
+            'mam'=>$mam,
+            'mama'=>$mama??' nie ma '
         ]);
     }
 
@@ -48,8 +51,43 @@ class DefaultController extends Controller
         $redis = $this->get('snc_redis.default');
         $val = $redis->incr('foo:bar');
 
+        try {
+            $predisClient = new Client();
+        }
+        catch (Exception $e){
+            die($e->getMessage());
+        }
+
+        $mam=$predisClient->get('mama');
+
+
         return $this->render('@App/index.html.twig', [
-            'mama'=>$val
+            'mama'=>$val,
+            'mam'=>$mam??' nie ma '
+        ]);
+    }
+
+    /**
+     *
+     * @Route("/cache", name="cache")
+     */
+    public function queryCacheAction()
+    {
+        $repository = $this->getDoctrine()
+            ->getRepository('AppBundle:Product');
+
+        $query = $repository->createQueryBuilder('p')
+            ->where('p.id < :id')
+            ->setParameter('id', '100')
+            ->orderBy('p.id', 'ASC')
+            ->getQuery()
+            ->useQueryCache(true)    // here
+            ->useResultCache(true);  // and here
+
+        $products = $query->getResult();
+
+        return $this->render('@App/cache.html.twig', [
+            'products'=>$products,
         ]);
     }
 }

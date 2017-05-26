@@ -60,6 +60,11 @@ doctrine:
         auto_generate_proxy_classes: '%kernel.debug%'
         naming_strategy: doctrine.orm.naming_strategy.underscore
         auto_mapping: true
+#        entity_managers:
+#            some_em:
+#                query_cache_driver: redis
+#                metadata_cache_driver: redis
+#                result_cache_driver: redis
 
 # Swiftmailer Configuration
 swiftmailer:
@@ -70,8 +75,21 @@ swiftmailer:
     spool: { type: memory }
 
 snc_redis:
-    clients:
-        default:
-            type: predis
-            alias: default
-            dsn: redis://localhost
+                                       clients:
+                                           default:
+                                               type: predis
+                                               alias: default
+                                               dsn: redis://localhost
+                                   #https://stackoverflow.com/a/31980339/6827096
+                                   #https://github.com/snc/SncRedisBundle/blob/master/Resources/doc/index.md#doctrine-caching
+                                       doctrine:
+                                           metadata_cache:
+                                               client: default
+                                               entity_manager: default          # the name of your entity_manager connection
+                                               document_manager: default        # the name of your document_manager connection
+                                           result_cache:
+                                               client: default
+                                               entity_manager: [default, read]  # you may specify multiple entity_managers
+                                           query_cache:
+                                               client: default
+                                               entity_manager: default
